@@ -6,7 +6,7 @@ import { reviewCards } from '@/lib/demo-data';
 import { getPublishedServers } from '@/lib/supabase';
 
 export default async function HomePage() {
-  const serverCatalog = await getPublishedServers();
+  const { items: serverCatalog, error } = await getPublishedServers();
 
   return (
     <div>
@@ -14,13 +14,13 @@ export default async function HomePage() {
         <div className="container-shell grid gap-10 py-16 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:py-24">
           <div>
             <div className="inline-flex rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">
-              Demo data • local only
+              {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo data • local only' : 'Published directory'}
             </div>
             <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
-              Find the right MCP server. <span className="text-teal-700">See it tested before you connect.</span>
+              Find the right MCP server. <span className="text-teal-700">See what is published and what remains unknown.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-slate-600">
-              Browse evidence-backed listings, compare options, and review how permissions, setup complexity, and compatibility are handled.
+              Browse public listings, compare options, and review permission and setup details without inventing unverified claims.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -34,7 +34,7 @@ export default async function HomePage() {
 
             <div className="mt-8 flex flex-wrap gap-6 text-sm text-slate-600">
               <div className="flex items-center gap-2"><CheckCircle2 className="text-teal-700" size={16} /> Public browsing</div>
-              <div className="flex items-center gap-2"><ShieldCheck className="text-teal-700" size={16} /> Verified evidence</div>
+              <div className="flex items-center gap-2"><ShieldCheck className="text-teal-700" size={16} /> Published evidence</div>
               <div className="flex items-center gap-2"><Boxes className="text-teal-700" size={16} /> Clear comparison</div>
             </div>
           </div>
@@ -42,15 +42,17 @@ export default async function HomePage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
             <div className="mb-4 flex items-center justify-between">
               <div className="text-sm font-medium text-slate-500">Quick search</div>
-              <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">Demo mode</div>
+              <div className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ? 'Demo mode' : 'Published rows'}
+              </div>
             </div>
             <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-600">
               <Search size={16} className="text-slate-400" />
               <input
                 type="text"
-                defaultValue="context + project memory"
+                defaultValue={serverCatalog[0]?.name ?? 'No published servers yet'}
                 className="w-full bg-transparent text-sm text-slate-700 outline-none"
-                aria-label="Quick search demo"
+                aria-label="Quick search published servers"
               />
             </label>
 
@@ -62,7 +64,7 @@ export default async function HomePage() {
                     <div className="text-xs text-slate-500">{server.category}</div>
                   </div>
                   <span className="rounded-full bg-teal-50 px-2 py-1 text-[11px] font-semibold text-teal-700">
-                    {server.verdict}
+                    {server.status}
                   </span>
                 </div>
               ))}
@@ -83,7 +85,7 @@ export default async function HomePage() {
             <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700">01</div>
             <h3 className="text-lg font-semibold text-slate-900">Trust labels</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Reviewed, unknown, and not tested remain explicit states instead of being stretched into unsupported claims.
+              Published, review, and draft states remain explicit rather than being stretched into unsupported claims.
             </p>
           </div>
 
@@ -99,7 +101,7 @@ export default async function HomePage() {
             <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700">03</div>
             <h3 className="text-lg font-semibold text-slate-900">Compare carefully</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              The compare flow highlights actual structured fields, date-stamped evidence, and areas where the answer is still unknown.
+              The compare flow highlights actual structured fields and areas where the answer is still unknown.
             </p>
           </div>
         </div>
@@ -109,15 +111,25 @@ export default async function HomePage() {
         <div className="container-shell">
           <SectionHeading
             eyebrow="Featured servers"
-            title="A small, honest set of reviewed examples"
-            description="These listings are demo fixtures used to validate the layout and information hierarchy in Phase 1."
+            title="Publicly published examples"
+            description={error ? 'The directory is temporarily unavailable.' : 'These listings reflect the current published data set.'}
           />
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            {serverCatalog.map((server) => (
-              <ServerCard key={server.slug} server={server} />
-            ))}
-          </div>
+          {error ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+              {error}
+            </div>
+          ) : serverCatalog.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
+              No published servers are available yet.
+            </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-3">
+              {serverCatalog.map((server) => (
+                <ServerCard key={server.slug} server={server} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

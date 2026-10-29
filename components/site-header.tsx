@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { AuthStatus } from '@/components/auth-status';
+
 const navItems = [
   { href: '/', label: 'Home' },
   { href: '/servers', label: 'Servers' },
@@ -34,9 +36,13 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link href="/admin" className="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 sm:inline-flex">
+            Editor area
+          </Link>
           <Link href="/submit" className="hidden rounded-full border border-teal-700 px-4 py-2 text-sm font-medium text-teal-700 transition hover:bg-teal-50 sm:inline-flex">
             Submit server
           </Link>
+          <AuthStatus />
           <Link href="/servers" className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700">
             Browse servers
           </Link>

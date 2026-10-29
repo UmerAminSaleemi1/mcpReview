@@ -5,14 +5,14 @@ import { ServerCard } from '@/components/server-card';
 import { getPublishedServers } from '@/lib/supabase';
 
 export default async function ServersPage() {
-  const serverCatalog = await getPublishedServers();
+  const { items: serverCatalog, error } = await getPublishedServers();
 
   return (
     <div className="container-shell py-12">
       <SectionHeading
         eyebrow="Directory"
         title="Browse MCP servers"
-        description="Filter by category, hosting model, and evidence status. Demo data is clearly labeled and not production content."
+        description="Filter by category, hosting model, and publication status. The directory reflects the current published records only."
       />
 
       <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
@@ -21,7 +21,7 @@ export default async function ServersPage() {
             <Search size={16} className="text-slate-400" />
             <input
               type="text"
-              defaultValue="database + read-only"
+              defaultValue={serverCatalog[0]?.name ?? 'No published servers yet'}
               className="w-full bg-transparent text-sm outline-none"
               aria-label="Search the server directory"
             />
@@ -37,20 +37,25 @@ export default async function ServersPage() {
       </div>
 
       <div className="mb-8 flex flex-wrap gap-3 text-sm text-slate-600">
-        <span className="rounded-full bg-slate-900 px-3 py-1.5 text-white">Reviewed</span>
-        <span className="rounded-full bg-slate-100 px-3 py-1.5">Needs more evidence</span>
-        <span className="rounded-full bg-slate-100 px-3 py-1.5">Unknown</span>
+        <span className="rounded-full bg-slate-900 px-3 py-1.5 text-white">Published</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1.5">Unpublished</span>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {serverCatalog.map((server) => (
-          <ServerCard key={server.slug} server={server} />
-        ))}
-      </div>
-
-      <div className="mt-10 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
-        Empty state example: no search results would show a clear message here rather than a blank page.
-      </div>
+      {error ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          {error}
+        </div>
+      ) : serverCatalog.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+          No published servers are available yet.
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-3">
+          {serverCatalog.map((server) => (
+            <ServerCard key={server.slug} server={server} />
+          ))}
+        </div>
+      )}
 
       <div className="mt-8 flex justify-between text-sm text-slate-600">
         <Link href="/" className="text-teal-700">Back home</Link>

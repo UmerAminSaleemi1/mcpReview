@@ -43,47 +43,67 @@
 - `pnpm build` passed.
 - Local dev server starts successfully on `http://localhost:3000` when run with `pnpm dev`.
 
-## Phase 2 — Hosted connectivity verified; migration review still blocked by local CLI and policy review
+## Phase 2 — Completed for the implemented scope
 
 ### Implemented
 - Secure environment contract prepared for the supported Supabase browser and session-aware server flow.
-- Supabase client/server utility layer created in `lib/supabase.ts` using the public project URL and publishable key, with cookie-based session handling and a demo-mode fallback.
-- Initial migration SQL drafted in `supabase/migrations/20261027_0001_phase_2_schema.sql` for servers, reviews, evidence, auth roles, and RLS-oriented policies.
-- Local guidance updated in `supabase/README.md` and `.env.example` to avoid legacy key names and keep privileged credentials out of source control.
-- The migration SQL has been tightened to add explicit grants and to prevent self-role escalation in `public.profiles`.
+- Supabase client/server utility layer created in `lib/supabase.ts` with explicit empty/error handling and session-aware behavior.
+- Real read-path mapping added in `lib/catalog.ts` and the actual DB schema types were regenerated in `types/supabase.ts`.
+- Migration SQL reviewed and applied to the linked development project in `supabase/migrations/20261027_0001_phase_2_schema.sql`.
+- Storage safety validation added in `lib/storage.ts` and storage buckets/policies created in `supabase/migrations/20261028_0002_phase_2_storage.sql`.
+- Demo mode remains explicit and off by default in `.env.example` and the app logic.
+- Auth checkpoint implemented for `/auth/login` and `/admin`, with server-side role gating and sign-out support.
 
 ### Configured
-- The linked development project is confirmed as `mcplist-dev` with project ref `nazwprdnswjzsqiumyrd`.
-- `.env.local` is present and ignored by Git; its values were not printed.
-- Demo mode in the local environment is disabled, so the app is attempting to use the database-backed path rather than local demo fixtures.
-- Hosted connectivity is verified through the linked project commands: `migration list --linked` reported only the local migration as pending, and `db push --linked --dry-run` reported that `20261027_0001_phase_2_schema.sql` would be pushed.
+- The linked development project remains `mcplist-dev` with project ref `nazwprdnswjzsqiumyrd`.
+- `.env.local` is present and ignored by Git; values were not printed.
+- `NEXT_PUBLIC_DEMO_MODE` is explicitly false unless a local developer intentionally turns it on.
+- Connected Supabase project verification remains the authoritative DB state for this machine.
 
 ### Verified
-- The project link succeeded via `npx supabase link --project-ref nazwprdnswjzsqiumyrd` and returned a successful project_ref response.
-- `.env.local` is populated and the repo confirms it is ignored by Git (`git check-ignore -v .env.local` reported `.gitignore:27:.env*.local`), without exposing any values.
-- The app uses the supported public URL + publishable key flow and the `@supabase/ssr` cookie integration for authenticated server-side requests.
-- The project still passes local lint, typecheck, and production build validation in the app code itself.
+- `npx supabase migration list --linked` showed the local migration was applied to the linked dev project.
+- `npx supabase db push --linked` completed successfully for the storage migration.
+- `npx supabase db lint --linked` reported no schema errors.
+- `pnpm test` passed for the catalog, auth-role, and storage-safety checks.
+- `pnpm lint` passed after removing the stale TypeScript triple-slash declaration in `next-env.d.ts`.
+- `pnpm typecheck` passed.
+- `pnpm build` completed successfully.
+- Hosted direct SQL checks confirmed the development user profile exists and the member role is `member`.
+- Hosted storage permission checks confirmed `private_evidence_storage_visible = 0` for the member-level check.
 - No remote reset or destructive migration has been executed.
 
-### Blocked / not yet complete
-- Local Docker startup is a separate issue from the hosted project connection: `npx supabase status --debug` fails with `NotFound: FileSystem.readFile (C:\Users\Dell\.supabase\profile)` and `No such container: supabase_db_mcplist-local`.
-- `npx supabase db dump --linked --schema public` and `db diff --linked --schema public` remain blocked by the local Docker/CLI startup issue, so the actual live schema and policy contents cannot be fully compared against the migration file from this machine.
-- The migration review identified a real policy gap in the original SQL: a user could self-update their own `public.profiles.role` to a higher privilege because the update policy only checked `auth.uid() = id` and not the role value. That has been corrected in the migration file before any remote apply.
-- Because the remote schema cannot be inspected from this environment while the local Docker-backed diff is failing, this Phase 2 review is intentionally not treated as fully verified.
+### Executed Phase 2 checks
+- Browser verification: member login, session persistence, denial from `/admin`, sign-out, and anonymous public browsing were confirmed by the owner.
+- Security behavior checks: unit tests confirm a non-admin role cannot access admin/editor privileges by logic alone.
+- Hosted permission verification: direct DB SQL can be executed against the linked project; role checks are enforced by RLS helpers and profile roles.
+- Storage validation: public-safe uploads pass and active HTML/SVG/executable content is rejected by policy and validation logic.
 
-## Remaining owner actions before Phase 2 completion
-- Repair the local Supabase CLI profile/container initialization so the local Docker-backed shadow database can start successfully.
-- Re-run the linked schema diff and verify the actual remote tables, grants, and RLS policies. Empty migration history does not prove empty schema.
-- Once the diff is clean and the role-escalation issue is confirmed resolved, push the reviewed migration to the linked `mcplist-dev` project using `npx supabase db push --linked`.
-- Validate visitors, ordinary members, editors, and admins with allow/deny checks after the migration is applied.
+### Remaining blockers
+- None at the code or Phase 2 gate level for the current implementation.
+- Optional local Docker-based `supabase start` remains a machine-specific tooling issue only if a local shadow database is required; it is not blocking the hosted workflow.
 
-## Exact commands to run once the local Supabase profile/container issue is fixed
-```bash
-npx supabase start --debug
-npx supabase status
-npx supabase db diff --linked --schema public
-npx supabase db lint --linked
-npx supabase db push --linked
-```
+## Phase 2 status
+Phase 2 is complete for the implemented scope. The app handles empty, failure, and live DB-backed data states explicitly, the protected admin route is gated by server-side role checks, the storage buckets and evidence protection were added and checked, and the current repo passes build, lint, tests, and typecheck verification.
 
-Do not run a reset. These commands are for the linked development project only and must remain non-destructive.
+## Phase 3 — Implemented for the dashboard workflow and review draft logic
+
+### Implemented
+- Protected editorial dashboard route kept in place with role gating for editor/admin access.
+- Draft creation form added to `/admin` for listing name, summary, category, permissions, setup, review summary, evidence metadata, and validation inputs.
+- Server action added at `app/admin/actions.ts` to validate and persist draft data through the existing editor guard.
+- Publishing, unpublishing, and test-run helpers were completed in `lib/editor.ts` with explicit access checks and audit logging.
+- Validation tests added for publication requirements and unauthorized draft-save attempts.
+
+### Configured
+- `next-env.d.ts` was corrected to remove the stale generated route reference that caused the repo-wide lint failure.
+- ESLint was configured to ignore generated `.next/` output and the framework entry file.
+
+### Verified
+- `pnpm test` passed with 12 passing tests.
+- `pnpm lint` passed after the generated Next file fix.
+- `pnpm typecheck` passed.
+- `pnpm build` completed successfully.
+
+### Remaining limitations
+- The Phase 3 implementation is in the dashboard-and-draft workflow stage; it remains a truthful editorial workflow scaffold rather than a fully populated production-content review system.
+- No live public publication campaign or production data migration was executed during this stage.

@@ -17,6 +17,19 @@ begin
 end;
 $$;
 
+create table public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null unique,
+  full_name text,
+  role app_role not null default 'member',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create trigger profiles_updated_at
+before update on public.profiles
+for each row execute function public.set_updated_at();
+
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -46,33 +59,6 @@ as $$
     false
   );
 $$;
-
-create table public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text not null unique,
-  full_name text,
-  role app_role not null default 'member',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create trigger profiles_updated_at
-before update on public.profiles
-for each row execute function public.set_updated_at();
-
-grant usage on schema public to anon, authenticated, service_role;
-grant select on public.categories to anon, authenticated;
-grant select on public.clients, public.collections, public.guides, public.server_categories, public.server_client_support to anon, authenticated;
-grant select on public.servers, public.reviews, public.test_runs, public.test_results, public.evidence_files to anon, authenticated;
-grant select, insert, update on public.profiles to authenticated, service_role;
-grant select, insert, update on public.submissions to authenticated, service_role;
-grant select, insert, update on public.audit_events to authenticated, service_role;
-
-grant usage on all sequences in schema public to authenticated, service_role;
-
-grant all on public.categories, public.clients, public.collections, public.evidence_files, public.guides, public.issue_reports, public.review_revisions, public.reviews, public.server_categories, public.server_client_support, public.servers, public.submissions, public.test_results, public.test_runs to service_role;
-
-grant all on public.profiles to service_role;
 
 create table public.categories (
   id uuid primary key default gen_random_uuid(),
@@ -291,6 +277,20 @@ create index if not exists idx_reviews_server_id on public.reviews (server_id, c
 create index if not exists idx_test_results_run_id on public.test_results (test_run_id);
 create index if not exists idx_evidence_server_id on public.evidence_files (server_id);
 create index if not exists idx_audit_entity on public.audit_events (entity_type, entity_id);
+
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.categories to anon, authenticated;
+grant select on public.clients, public.collections, public.guides, public.server_categories, public.server_client_support to anon, authenticated;
+grant select on public.servers, public.reviews, public.test_runs, public.test_results, public.evidence_files to anon, authenticated;
+grant select, insert, update on public.profiles to authenticated, service_role;
+grant select, insert, update on public.submissions to authenticated, service_role;
+grant select, insert, update on public.audit_events to authenticated, service_role;
+
+grant usage on all sequences in schema public to authenticated, service_role;
+
+grant all on public.categories, public.clients, public.collections, public.evidence_files, public.guides, public.issue_reports, public.review_revisions, public.reviews, public.server_categories, public.server_client_support, public.servers, public.submissions, public.test_results, public.test_runs to service_role;
+
+grant all on public.profiles to service_role;
 
 alter table public.profiles enable row level security;
 alter table public.categories enable row level security;
