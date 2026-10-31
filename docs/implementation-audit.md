@@ -118,6 +118,31 @@ The migration defines a `public.servers` table with fields such as `slug`, `name
 
 This means the app is currently reading a shape that is partly schema-agnostic and partly demo-shaped. The code can still work in demo mode, but it is not yet a fully faithful read of the real migration-based data model.
 
+## Live Phase 3 verification results
+
+The browser workflow was verified against the running app after creating a separate owner-admin account and keeping the existing member test account unchanged.
+
+### Actual live verification
+
+- App URL: http://localhost:3000
+- Login URL: http://localhost:3000/auth/login?next=/admin
+- Admin dashboard URL: http://localhost:3000/admin
+- Admin account used for verification: owner-admin@mcplist.dev
+- Existing member test record kept intact: test@gmail.com with its prior editor/member state was not reset or repurposed.
+
+### Verified editorial workflow
+
+1. Sign-in succeeded with the owner-admin account and reached the admin dashboard.
+2. A new draft listing was created for “Veridian MCP” with the slug `veridian-mcp`.
+3. The draft was persisted in the linked Supabase project and logged as an `audit_events` `draft_saved` action.
+4. Manual evidence metadata was saved for the listing with explicit privacy visibility controls.
+5. The publish action changed the listing to `status = 'published'` and stored a `published` audit event.
+6. The public page http://localhost:3000/servers/veridian-mcp rendered successfully.
+7. The unpublish action returned the listing to the draft state and recorded an `unpublished` audit event.
+8. Review and evidence data remained connected to the listing, demonstrating the history trail for a published editorial record.
+
+This is evidence-based runtime verification, separate from the implementation status. The code was implemented earlier; the browser checks confirm the live system behaves as expected in the current repo state.
+
 ## Current risk assessment
 
 ### Low-risk / complete
@@ -130,6 +155,7 @@ This means the app is currently reading a shape that is partly schema-agnostic a
 - auth-role logic and protected `/admin` enforcement
 - storage validation and bucket/policy setup
 - build, lint, typecheck, and test verification
+- live Phase 3 editorial dashboard workflow on the running app
 
 ### Medium-risk / optional only
 
@@ -138,13 +164,11 @@ This means the app is currently reading a shape that is partly schema-agnostic a
 
 ### High-risk / not yet relevant to this phase
 
-- Phase 3 editorial dashboard work
-- publication workflow beyond the current storage and permission checks
+- scaling beyond a single verified workflow listing
+- production publication campaigns or large editorial data migrations
 
 ## Conclusion
 
-The repository meets the playbook’s Phase 0, Phase 1, and Phase 2 expectations for the implemented scope. The linked Supabase development project has a real migration, the profile for the known development user is present and set to `member`, the public read path remains explicit, the auth gate is working, and the storage and evidence protections have been added and verified through code and hosted SQL checks.
+The repository meets the playbook’s Phase 0, Phase 1, and Phase 2 expectations for the implemented scope, and the live Phase 3 editorial flow has now been verified in the running app. The linked Supabase dev project contains the real schema, the owner-admin account is present and separate from the member test account, the draft-save/publish/unpublish lifecycle was exercised in-browser, and the public listing route rendered correctly after publication.
 
-The Phase 2 gate is complete for the current implementation and verified with the actual repository evidence: `pnpm test`, `pnpm lint`, `pnpm typecheck`, and `pnpm build` all passed after the final fixes, and the hosted storage check returned `private_evidence_storage_visible = 0` for the member-level scenario.
-
-Phase 3 work has not started and remains separate from the Phase 2 completion gate.
+The implementation remains honest and evidence-based: code checks passed earlier, and the browser verification in the running app confirms the actual workflow in the current environment. No further Phase 4 work should begin until this workflow remains validated in the live system.

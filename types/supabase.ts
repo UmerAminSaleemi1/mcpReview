@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -611,6 +611,38 @@ export type Database = {
           },
         ]
       }
+      slug_redirects: {
+        Row: {
+          created_at: string
+          server_id: string | null
+          slug: string
+          target_slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          server_id?: string | null
+          slug: string
+          target_slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          server_id?: string | null
+          slug?: string
+          target_slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slug_redirects_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submissions: {
         Row: {
           canonical_url: string | null
@@ -750,6 +782,10 @@ export type Database = {
     Functions: {
       is_admin: { Args: never; Returns: boolean }
       is_editor_or_admin: { Args: never; Returns: boolean }
+      is_safe_storage_upload: {
+        Args: { bucket_id: string; mime_type: string; object_name: string }
+        Returns: boolean
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

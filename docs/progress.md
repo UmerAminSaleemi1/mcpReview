@@ -104,6 +104,23 @@ Phase 2 is complete for the implemented scope. The app handles empty, failure, a
 - `pnpm typecheck` passed.
 - `pnpm build` completed successfully.
 
+### Verified in the running app (Phase 3 live workflow)
+- Browser app URL: http://localhost:3000
+- Login URL: http://localhost:3000/auth/login?next=/admin
+- Admin URL: http://localhost:3000/admin
+- Separate owner-admin account created and confirmed: owner-admin@mcplist.dev with role `admin`.
+- Existing member test account remained untouched: test@gmail.com remains the existing editor role record and was not reset or changed.
+
+### End-to-end browser workflow evidence
+- Draft creation succeeded through the live dashboard for the listing “Veridian MCP” with slug `/veridian-mcp`.
+- The draft persisted in the linked Supabase project and showed an audit event `draft_saved`.
+- Manual evidence save succeeded with evidence metadata and a review record attached to the listing.
+- Publish action succeeded and the server moved to `status = 'published'` with `published_at` set in the database.
+- Public route http://localhost:3000/servers/veridian-mcp rendered the listing page successfully.
+- Revision/history audit trail was present in `audit_events` with `published` and `draft_saved` entries; review state was recorded in `reviews`.
+- Unpublish action succeeded and created an `unpublished` audit event, returning the listing to draft state in the database.
+- Privacy control remained explicit: the workflow uses `private`/`published`/`redacted` visibility, and the evidence metadata was persisted with those values.
+
 ### Remaining limitations
-- The Phase 3 implementation is in the dashboard-and-draft workflow stage; it remains a truthful editorial workflow scaffold rather than a fully populated production-content review system.
-- No live public publication campaign or production data migration was executed during this stage.
+- The workflow was verified in the live app for the editorial lifecycle, but no production publication campaign or additional content migration was executed beyond the test listing used for verification.
+- This is a verified Phase 3 live workflow checkpoint, not a scaled editorial-content launch.
