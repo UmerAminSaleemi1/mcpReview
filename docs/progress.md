@@ -124,3 +124,28 @@ Phase 2 is complete for the implemented scope. The app handles empty, failure, a
 ### Remaining limitations
 - The workflow was verified in the live app for the editorial lifecycle, but no production publication campaign or additional content migration was executed beyond the test listing used for verification.
 - This is a verified Phase 3 live workflow checkpoint, not a scaled editorial-content launch.
+
+## Phase 4 — Awaiting live-provider verification
+
+### Implemented
+- Search and comparison state helpers added in `lib/search.ts` with validated sorting, URL-persisted filters, safe query normalization, and `buildCompareIds` guardrails.
+- Discovery and comparison query helpers added to `lib/supabase.ts` for filtered server results and shareable comparison IDs while preserving the public-only published dataset.
+- Public directory and comparison pages were updated to use the validated search state without reintroducing invalid pagination or unsafe parameter handling.
+- Submission and correction forms were updated in `app/submit/page.tsx` to keep separate Turnstile widgets, safe rate-limit friendly token handling, and independent success/error states.
+- Transactional email and Turnstile support were added in `lib/email.ts` and `lib/turnstile.ts` with graceful disabled behavior when credentials are not configured.
+- Phase 4 tests covering search normalization, compare ID validation, and safe email-disabled behavior were added and are passing.
+
+### Configured
+- `.env.example` includes the current Phase 4 placeholders for `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, and `EDITOR_NOTIFICATION_EMAIL`.
+- The app remains explicit about not sending real email or enabling live Turnstile captcha when these credentials are missing.
+
+### Verified
+- `pnpm lint` passed.
+- `pnpm typecheck` passed.
+- `pnpm test` passed with 16 passing tests and 0 failures.
+- The repository validation covers the new search, compare, and email-disabled behavior without depending on a live provider configuration.
+
+### Remaining blockers
+- Live Turnstile and Resend credentials were not configured in this environment, so the browser submission/email flow remains code-verified but not live-provider verified.
+- No real public submission or live moderation email has been sent from this machine; the implementation is ready for the owner to complete that configuration when credentials are available.
+- The current code does not include a separate persisted outbox/retry worker; provider failures are surfaced as failed delivery state rather than an automatic background retry queue.

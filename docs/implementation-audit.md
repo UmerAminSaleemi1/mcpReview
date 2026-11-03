@@ -20,7 +20,8 @@ This audit compares the current repository state to the requirements in [build-p
 | Phase 1 | Build the public app shell, routes, visual system, demo data, and production build checks | Home, browse, review, guides, collections, compare, legal, and submit pages exist; build output was generated successfully. | Verified for UI shell |
 | Phase 2 | Replace demo data with Supabase-backed reads and enforce auth + permissions + migration discipline | Local migration SQL and Supabase-backed access layer exist, the linked development project was successfully updated, and the repo now includes `/auth/login`, `/admin`, a server-side role gate, and auth-role unit tests. End-to-end owner test-user verification and direct hosted permission checks remain the main incomplete items. | Partially implemented |
 | Phase 3 | Editorial dashboard, publication workflow, admin/editor controls, and live publishing | The `/admin` route includes a role-gated dashboard, a draft creation form, a save action, publication helpers, test-run logic, and validation coverage. | Implemented for the dashboard and draft workflow |
-| Phase 4+ | Discovery, submissions, and later product phases | Not started | Pending |
+| Phase 4 | Discovery, comparison, submissions, moderation, and email delivery | The repo contains the search state helpers, filtered query logic, comparison ID validation, Turnstile-safe forms, and an email-disabled fallback path. Typecheck and tests pass. Live provider credentials are not configured here, so live submission/email verification remains pending. | Implemented and code-validated; not live-provider verified |
+| Phase 5+ | Launch readiness and later product phases | Not started | Pending |
 
 ## Verified facts
 
@@ -156,6 +157,7 @@ This is evidence-based runtime verification, separate from the implementation st
 - storage validation and bucket/policy setup
 - build, lint, typecheck, and test verification
 - live Phase 3 editorial dashboard workflow on the running app
+- Phase 4 search/comparison and submission/email logic at the code and automated-test level
 
 ### Medium-risk / optional only
 
@@ -169,6 +171,6 @@ This is evidence-based runtime verification, separate from the implementation st
 
 ## Conclusion
 
-The repository meets the playbook’s Phase 0, Phase 1, and Phase 2 expectations for the implemented scope, and the live Phase 3 editorial flow has now been verified in the running app. The linked Supabase dev project contains the real schema, the owner-admin account is present and separate from the member test account, the draft-save/publish/unpublish lifecycle was exercised in-browser, and the public listing route rendered correctly after publication.
+The repository meets the playbook’s Phase 0, Phase 1, Phase 2, and Phase 3 expectations for the implemented scope, and the live Phase 3 editorial flow has now been verified in the running app. The linked Supabase dev project contains the real schema, the owner-admin account is present and separate from the member test account, the draft-save/publish/unpublish lifecycle was exercised in-browser, and the public listing route rendered correctly after publication.
 
-The implementation remains honest and evidence-based: code checks passed earlier, and the browser verification in the running app confirms the actual workflow in the current environment. No further Phase 4 work should begin until this workflow remains validated in the live system.
+The repository also includes the Phase 4 discovery and submission implementation. This is partially live-verified only where credentials are configured; in the current environment, the required Turnstile and Resend credentials are absent, so provider-dependent live submission and mail delivery remain explicitly unverified. The code and automated tests are passing, and the remaining live checks require the owner to add the real provider settings and then exercise the forms in the running app.
